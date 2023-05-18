@@ -93,9 +93,9 @@ def load_model(
     else:
         tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=True)
         if load_4bit:
-            model = AutoGPTQForCausalLM.from_pretrained(model_path, low_cpu_mem_usage=True, **kwargs)
+            model = AutoModelForCausalLM.from_pretrained(model_path, low_cpu_mem_usage=True, **kwargs)
             quantized_model_dir = model_path + '-quantized'
-            model.save_quantized(quantized_model_dir)
+            model.save_pretrained(quantized_model_dir)
             model = AutoGPTQForCausalLM.from_quantized(quantized_model_dir, device, use_triton=True)
         else:
             model = AutoModelForCausalLM.from_pretrained(model_path, low_cpu_mem_usage=True, **kwargs)
