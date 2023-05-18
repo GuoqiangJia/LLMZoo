@@ -61,6 +61,7 @@ class ModelWorker:
             num_gpus,
             max_gpu_memory,
             load_8bit=False,
+            load_4bit=False,
     ):
         self.controller_addr = controller_addr
         self.worker_addr = worker_addr
@@ -71,7 +72,7 @@ class ModelWorker:
         self.device = device
 
         logger.info(f"Loading the model {self.model_name} on worker {worker_id} ...")
-        self.model, self.tokenizer = load_model(model_path, device, num_gpus, max_gpu_memory, load_8bit)
+        self.model, self.tokenizer = load_model(model_path, device, num_gpus, max_gpu_memory, load_8bit, load_4bit)
 
         if hasattr(self.model.config, "max_sequence_length"):
             self.context_len = self.model.config.max_sequence_length
@@ -223,6 +224,7 @@ if __name__ == "__main__":
         help="The maximum memory per gpu. Use a string like '13Gib'",
     )
     parser.add_argument("--load-8bit", action="store_true")
+    parser.add_argument("--load-4bit", action="store_true")
     parser.add_argument("--limit-model-concurrency", type=int, default=5)
     parser.add_argument("--stream-interval", type=int, default=2)
     parser.add_argument("--no-register", action="store_true")
