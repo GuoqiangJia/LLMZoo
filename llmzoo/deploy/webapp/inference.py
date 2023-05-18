@@ -143,7 +143,7 @@ def generate_stream(model, tokenizer, params, device, context_len=2048, stream_i
                 logits = out.logits
                 past_key_values = out.past_key_values
             else:
-                out = model(torch.as_tensor([input_ids], device=device))
+                out = model(torch.as_tensor([input_ids]))
                 logits = out.logits
                 past_key_values = out.past_key_values
         else:
