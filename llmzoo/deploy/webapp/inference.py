@@ -53,7 +53,7 @@ def load_model(
 ):
     if device == "cpu":
         kwargs = {}
-    elif device == "cuda":
+    elif device.startswith("cuda"):
         kwargs = {"torch_dtype": torch.float16}
         if num_gpus == "auto":
             kwargs["device_map"] = "auto"
