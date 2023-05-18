@@ -242,5 +242,6 @@ if __name__ == "__main__":
         args.num_gpus,
         args.max_gpu_memory,
         args.load_8bit,
+        args.load_4bit
     )
     uvicorn.run(app, host=args.host, port=args.port, log_level="info")
