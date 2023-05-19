@@ -160,7 +160,7 @@ def generate_stream(model, tokenizer, params, device, context_len=2048, stream_i
                 past_key_values = out.past_key_values
             else:
                 out = model(
-                    input_ids=torch.as_tensor([[token]], device=device, dtype=torch.int),
+                    input_ids=torch.as_tensor([[token]], device=device, dtype=torch.long),
                     use_cache=True,
                     past_key_values=past_key_values,
                 )
