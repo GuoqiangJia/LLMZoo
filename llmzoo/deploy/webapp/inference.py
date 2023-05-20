@@ -94,7 +94,6 @@ def load_model(
         tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=True)
         if load_4bit:
             model = AutoGPTQForCausalLM.from_quantized(model_path, device, use_triton=False)
-            model = model.float()
         else:
             model = AutoModelForCausalLM.from_pretrained(model_path, low_cpu_mem_usage=True, **kwargs)
 
