@@ -6,4 +6,6 @@ if __name__ == '__main__':
     inputs = tokenizer.encode("Translate to English: Je t’aime.", return_tensors="pt")
     inputs = inputs.to('cuda')
     outputs = model.generate(inputs)
+    print(outputs)
+    print(outputs[0].shape)
     print(tokenizer.decode(outputs[0]))
