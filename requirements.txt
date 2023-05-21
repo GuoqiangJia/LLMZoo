@@ -1,5 +1,4 @@
 numpy
-torch
 transformers
 accelerate
 peft
@@ -12,3 +11,10 @@ wandb
 markdown2[all]
 requests
 prompt_toolkit
+rich
+chardet
+auto_gptq
+charset_normalizer
+
+--extra-index-url https://download.pytorch.org/whl/cu118
+torch
