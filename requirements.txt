@@ -1,6 +1,6 @@
 numpy
 torch
-git+https://github.com/huggingface/transformers.git
+transformers
 accelerate
 peft
 flash-attn
