@@ -11,7 +11,6 @@ import requests
 from llmzoo.deploy.webapp.constants import LOGDIR
 from llmzoo.deploy.webapp.gradio_css import code_highlight_css
 from llmzoo.deploy.webapp.gradio_patch import Chatbot as grChatbot
-from llmzoo.deploy.webapp.standalone.model_worker import ModelWorker
 from llmzoo.deploy.webapp.utils import (
     build_logger,
     server_error_msg,
@@ -31,9 +30,9 @@ no_change_btn = gr.Button.update()
 enable_btn = gr.Button.update(interactive=True)
 disable_btn = gr.Button.update(interactive=False)
 
+controller_url = None
 enable_moderation = False
 models = []
-worker = None
 
 priority = {
     "vicuna-13b": "aaa",
@@ -170,6 +169,26 @@ def http_bot(state, model_selector, temperature, max_new_tokens, request: gr.Req
         new_state.append_message(new_state.roles[1], None)
         state = new_state
 
+    # Query worker address
+    # ret = requests.post(controller_url + "/get_worker_address", json={"model": model_name})
+    # worker_addr = ret.json()["address"]
+    worker_addr = 'https://u141277-ac38-434f88f5.neimeng.seetacloud.com:6443/'
+    logger.info(f"model_name: {model_name}, worker_addr: {worker_addr}")
+
+    # No available worker
+    if worker_addr == "":
+        state.messages[-1][-1] = server_error_msg
+        yield (
+            state,
+            state.to_gradio_chatbot(),
+            disable_btn,
+            disable_btn,
+            disable_btn,
+            enable_btn,
+            enable_btn,
+        )
+        return
+
     # Construct prompt
     prompt = state.get_prompt()
 
@@ -187,9 +206,15 @@ def http_bot(state, model_selector, temperature, max_new_tokens, request: gr.Req
     yield (state, state.to_gradio_chatbot()) + (disable_btn,) * 5
 
     try:
-        response = worker.generate_stream(pload)
-        print(response)
-        for chunk in response.body_iterator:
+        # Stream output
+        response = requests.post(
+            worker_addr + "/worker_generate_stream",
+            headers=headers,
+            json=pload,
+            stream=True,
+            timeout=20,
+        )
+        for chunk in response.iter_lines(decode_unicode=False, delimiter=b"\0"):
             if chunk:
                 data = json.loads(chunk.decode())
                 if data["error_code"] == 0:
@@ -337,7 +362,7 @@ def build_single_model_ui():
 
 def build_demo():
     with gr.Blocks(
-            title="ChatGPT like Chatbot",
+            title="Chat with Open Large Language Models",
             theme=gr.themes.Base(),
             css=block_css,
     ) as demo:
@@ -378,34 +403,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", type=str, default="0.0.0.0")
     parser.add_argument("--port", type=int)
-    parser.add_argument("--model-path", type=str, default="FreedomIntelligence/phoenix-inst-chat-7b")
     parser.add_argument("--concurrency-count", type=int, default=10)
     parser.add_argument("--model-list-mode", type=str, default="once", choices=["once", "reload"])
     parser.add_argument("--share", action="store_true")
     parser.add_argument("--moderate", action="store_true", help="Enable content moderation")
-
-    parser.add_argument("--model-name", type=str, help="Optional name")
-    parser.add_argument(
-        "--device", type=str, choices=["cpu", "cuda", "mps"], default="cuda"
-    )
-    parser.add_argument("--num-gpus", type=int, default=1)
-    parser.add_argument(
-        "--max-gpu-memory",
-        type=str,
-        help="The maximum memory per gpu. Use a string like '13Gib'",
-    )
-    parser.add_argument("--load-8bit", action="store_true")
-    parser.add_argument("--load-4bit", action="store_true")
-    parser.add_argument("--limit-model-concurrency", type=int, default=5)
-    parser.add_argument("--stream-interval", type=int, default=2)
-
     args = parser.parse_args()
     logger.info(f"args: {args}")
 
-    models = [args.model_path]
-    worker = ModelWorker(model_path=args.model_path, model_name=args.model_name, device=args.device,
-                         num_gpus=args.num_gpus, max_gpu_memory=args.max_gpu_memory, load_8bit=args.load_8bit,
-                         load_4bit=args.load_4bit)
+    models = ['FreedomIntelligence/phoenix-inst-chat-7b']
     set_global_vars(args.moderate, models)
 
     logger.info(args)

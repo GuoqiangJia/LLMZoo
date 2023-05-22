@@ -4,7 +4,9 @@ A model worker executes the model.
 import argparse
 import asyncio
 import json
-from fastapi import BackgroundTasks
+import uuid
+
+from fastapi import FastAPI, Request, BackgroundTasks
 from fastapi.responses import StreamingResponse
 
 try:
@@ -22,13 +24,15 @@ except ImportError:
         AutoModel,
     )
 import torch
+import uvicorn
 
 from llmzoo.deploy.webapp.inference import load_model, generate_stream
-from llmzoo.deploy.webapp.utils import build_logger, server_error_msg
+from llmzoo.deploy.webapp.utils import build_logger, server_error_msg, pretty_print_semaphore
 
 GB = 1 << 30
 
-logger = build_logger("model_worker", f"model_worker.log")
+worker_id = str(uuid.uuid4())[:6]
+logger = build_logger("model_worker", f"model_worker_{worker_id}.log")
 global_counter = 0
 
 model_semaphore = None
@@ -37,6 +41,8 @@ model_semaphore = None
 class ModelWorker:
     def __init__(
             self,
+            worker_addr,
+            worker_id,
             model_path,
             model_name,
             device,
@@ -45,12 +51,14 @@ class ModelWorker:
             load_8bit=False,
             load_4bit=False,
     ):
+        self.worker_addr = worker_addr
+        self.worker_id = worker_id
         if model_path.endswith("/"):
             model_path = model_path[:-1]
         self.model_name = model_name or model_path.split("/")[-1]
         self.device = device
 
-        logger.info(f"Loading the model {self.model_name}...")
+        logger.info(f"Loading the model {self.model_name} on worker {worker_id} ...")
         self.model, self.tokenizer = load_model(model_path, device, num_gpus, max_gpu_memory, load_8bit, load_4bit)
 
         if hasattr(self.model.config, "max_sequence_length"):
@@ -105,31 +113,39 @@ class ModelWorker:
             }
             yield json.dumps(ret).encode() + b"\0"
 
-    async def generate_stream(self, request):
-        global model_semaphore, global_counter
-        global_counter += 1
-        params = await request
 
-        if model_semaphore is None:
-            model_semaphore = asyncio.Semaphore(args.limit_model_concurrency)
-        await model_semaphore.acquire()
-        generator = self.generate_stream_gate(params)
-        background_tasks = BackgroundTasks()
-        background_tasks.add_task(release_model_semaphore)
-        return StreamingResponse(generator, background=background_tasks)
+app = FastAPI()
 
 
 def release_model_semaphore():
-    if model_semaphore:
-        model_semaphore.release()
+    model_semaphore.release()
+
+
+@app.post("/worker_generate_stream")
+async def api_generate_stream(request: Request):
+    global model_semaphore, global_counter
+    global_counter += 1
+    params = await request.json()
+
+    if model_semaphore is None:
+        model_semaphore = asyncio.Semaphore(args.limit_model_concurrency)
+    await model_semaphore.acquire()
+    generator = worker.generate_stream_gate(params)
+    background_tasks = BackgroundTasks()
+    background_tasks.add_task(release_model_semaphore)
+    return StreamingResponse(generator, background=background_tasks)
+
+
+@app.post("/worker_get_status")
+async def api_get_status(request: Request):
+    return worker.get_status()
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--host", type=str, default="localhost")
-    parser.add_argument("--port", type=int, default=21666)
-    parser.add_argument("--worker-address", type=str, default="http://localhost:21666")
-    parser.add_argument("--controller-address", type=str, default="http://localhost:21888")
+    parser.add_argument("--host", type=str, default="0.0.0.0")
+    parser.add_argument("--port", type=int, default=6006)
+    parser.add_argument("--worker-address", type=str, default="http://0.0.0.0:6006")
     parser.add_argument(
         "--model-path",
         type=str,
@@ -154,4 +170,15 @@ if __name__ == "__main__":
     args = parser.parse_args()
     logger.info(f"args: {args}")
 
-    # uvicorn.run(app, host=args.host, port=args.port, log_level="info")
+    worker = ModelWorker(
+        args.worker_address,
+        worker_id,
+        args.model_path,
+        args.model_name,
+        args.device,
+        args.num_gpus,
+        args.max_gpu_memory,
+        args.load_8bit,
+        args.load_4bit
+    )
+    uvicorn.run(app, host=args.host, port=args.port, log_level="info")
