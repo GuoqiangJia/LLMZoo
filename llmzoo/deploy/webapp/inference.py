@@ -23,7 +23,7 @@ except ImportError:
     )
 
 from auto_gptq import AutoGPTQForCausalLM
-    
+
 from llmzoo.utils import get_default_conv_template, SeparatorStyle
 from llmzoo.deploy.webapp.compression import compress_module
 from llmzoo.deploy.webapp.monkey_patch_non_inplace import replace_llama_attn_with_non_inplace_operations
@@ -143,8 +143,7 @@ def generate_stream(model, tokenizer, params, device, context_len=2048, stream_i
                 logits = out.logits
                 past_key_values = out.past_key_values
             else:
-                print(model)
-                out = model(input_ids=torch.as_tensor([input_ids], device=device, dtype=torch.int), use_cache=True)
+                out = model(torch.as_tensor([input_ids], device=device), use_cache=True)
                 logits = out.logits
                 past_key_values = out.past_key_values
         else:
@@ -160,7 +159,7 @@ def generate_stream(model, tokenizer, params, device, context_len=2048, stream_i
                 past_key_values = out.past_key_values
             else:
                 out = model(
-                    input_ids=torch.as_tensor([token], device=device, dtype=torch.int),
+                    input_ids=torch.as_tensor([[token]], device=device),
                     use_cache=True,
                     past_key_values=past_key_values,
                 )
