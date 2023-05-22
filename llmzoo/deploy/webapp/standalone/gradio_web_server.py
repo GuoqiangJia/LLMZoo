@@ -188,7 +188,8 @@ def http_bot(state, model_selector, temperature, max_new_tokens, request: gr.Req
 
     try:
         response = worker.generate_stream(pload)
-        for chunk in response.iter_lines(decode_unicode=False, delimiter=b"\0"):
+        print(response)
+        for chunk in response.body_iterator:
             if chunk:
                 data = json.loads(chunk.decode())
                 if data["error_code"] == 0:
