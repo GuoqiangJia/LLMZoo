@@ -15,6 +15,7 @@ rich
 chardet
 auto_gptq
 charset_normalizer
+supervisor
 
 --extra-index-url https://download.pytorch.org/whl/cu118
 torch
