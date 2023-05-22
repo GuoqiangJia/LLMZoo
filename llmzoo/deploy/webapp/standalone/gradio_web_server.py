@@ -384,6 +384,7 @@ if __name__ == "__main__":
     parser.add_argument("--share", action="store_true")
     parser.add_argument("--moderate", action="store_true", help="Enable content moderation")
 
+    parser.add_argument("--model-name", type=str, help="Optional name")
     parser.add_argument(
         "--device", type=str, choices=["cpu", "cuda", "mps"], default="cuda"
     )
@@ -402,8 +403,9 @@ if __name__ == "__main__":
     logger.info(f"args: {args}")
 
     models = [args.model_path]
-    worker = ModelWorker(model_path=args.model_path, device=args.device, num_gpus=args.num_gpus,
-                         max_gpu_memory=args.max_gpu_memory, load_8bit=args.load_8bit, load_4bit=args.load_4bit)
+    worker = ModelWorker(model_path=args.model_path, model_name=args.model_name, device=args.device,
+                         num_gpus=args.num_gpus, max_gpu_memory=args.max_gpu_memory, load_8bit=args.load_8bit,
+                         load_4bit=args.load_4bit)
     set_global_vars(args.moderate, models)
 
     logger.info(args)
