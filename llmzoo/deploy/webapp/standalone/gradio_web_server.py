@@ -45,9 +45,8 @@ priority = {
 }
 
 
-def set_global_vars(controller_url_, enable_moderation_, models_):
-    global controller_url, enable_moderation, models
-    controller_url = controller_url_
+def set_global_vars(enable_moderation_, models_):
+    global enable_moderation, models
     enable_moderation = enable_moderation_
     models = models_
 
