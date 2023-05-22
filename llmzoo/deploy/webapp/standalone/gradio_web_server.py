@@ -362,7 +362,7 @@ def build_single_model_ui():
 
 def build_demo():
     with gr.Blocks(
-            title="Chat with Open Large Language Models",
+            title="Large Language Models Chatbot",
             theme=gr.themes.Base(),
             css=block_css,
     ) as demo:
