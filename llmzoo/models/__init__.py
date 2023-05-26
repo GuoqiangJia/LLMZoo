@@ -43,13 +43,13 @@ def build_model(model_args, training_args):
         "unk_token": DEFAULT_UNK_TOKEN,
     })
 
-    # if hasattr(model, "enable_input_require_grads"):
-    #     model.enable_input_require_grads()
-    # else:
-    #     def make_inputs_require_grad(module, input, output):
-    #         output.requires_grad_(True)
-    #
-    #     model.get_input_embeddings().register_forward_hook(make_inputs_require_grad)
+    if hasattr(model, "enable_input_require_grads"):
+        model.enable_input_require_grads()
+    else:
+        def make_inputs_require_grad(module, input, output):
+            output.requires_grad_(True)
+
+        model.get_input_embeddings().register_forward_hook(make_inputs_require_grad)
 
     # Step 4: Initialize LoRA
     if model_args.lora:
