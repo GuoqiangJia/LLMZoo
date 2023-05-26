@@ -5,8 +5,7 @@ output_dir=checkpoints/phoenix_7b/
 
 torchrun \
   --nnodes=1 \
-  --nproc_per_node=8 \
-  --master_port=12375 \
+  --nproc_per_node=1 \
   train.py \
   --model_name_or_path ${model_name_or_path} \
   --model_max_length ${model_max_length} \
@@ -14,9 +13,9 @@ torchrun \
   --output_dir ${output_dir} \
   --bf16 True \
   --num_train_epochs 3 \
-  --per_device_train_batch_size 4 \
-  --per_device_eval_batch_size 4 \
-  --gradient_accumulation_steps 8 \
+  --per_device_train_batch_size 1 \
+  --per_device_eval_batch_size 1 \
+  --gradient_accumulation_steps 4 \
   --save_strategy "steps" \
   --save_steps 500 \
   --evaluation_strategy "no" \
