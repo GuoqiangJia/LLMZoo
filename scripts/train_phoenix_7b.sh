@@ -1,6 +1,6 @@
 model_name_or_path=bigscience/bloomz-7b1-mt
 model_max_length=2048
-data_path=/content/drive/MyDriver/bloom-training/train/data/data.json
+data_path=/content/drive/MyDrive/bloom-training/train/data/data.json
 output_dir=checkpoints/phoenix_7b/
 
 torchrun \
