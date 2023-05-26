@@ -3,7 +3,8 @@ model_max_length=2048
 data_path=/content/drive/MyDrive/bloom-training/train/data/data.json
 output_dir=checkpoints/phoenix_7b/
 
-accelerate launch --config_file ./scripts/accelerate_config.yaml train.py \
+#accelerate launch --config_file ./scripts/accelerate_config.yaml train.py \
+python train.py \
   --model_name_or_path ${model_name_or_path} \
   --model_max_length ${model_max_length} \
   --data_path ${data_path} \
