@@ -2,7 +2,6 @@ numpy
 transformers
 accelerate
 peft
-flash-attn
 sentencepiece
 gradio
 fastapi
