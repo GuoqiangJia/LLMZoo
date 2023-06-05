@@ -172,7 +172,7 @@ def http_bot(state, model_selector, temperature, max_new_tokens, request: gr.Req
     # Query worker address
     # ret = requests.post(controller_url + "/get_worker_address", json={"model": model_name})
     # worker_addr = ret.json()["address"]
-    worker_addr = 'https://u141277-b1ae-00b8d4cb.neimeng.seetacloud.com:6443'
+    worker_addr = 'https://u141277-b6ae-fe7a033f.neimeng.seetacloud.com:6443'
     logger.info(f"model_name: {model_name}, worker_addr: {worker_addr}")
 
     # No available worker
